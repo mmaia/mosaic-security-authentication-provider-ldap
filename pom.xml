@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.backbase.extensions.mosaic-security</groupId>
+    <artifactId>authentication-provider-ldap</artifactId>
+    <version>1.2-SNAPSHOT</version>
+
+    <name>Mosaic LDAP Authentication Provider</name>
+
+    <properties>
+        <portal.version>5.5.0.1</portal.version>
+        <spring.version>3.1.3.RELEASE</spring.version>
+    </properties>
+
+    <description>
+<![CDATA[
+
+
+        Add the following section to the backbase.properties
+
+
+        ﻿# LDAP HOSTS (space delimited)
+        ldap.host=ldap://ADSERVER1:389 ldap://ADSERVER2.389
+        ldap.root=
+
+        # LDAP User with bind access
+        ldap.userDn=username@domain
+        ldap.password=password
+
+        # Base DN
+        ldap.user.search.base=
+        ldap.user.search.filter=(&(sAMAccountName={0})(objectclass=user))
+        ldap.group.search.base=
+        ldap.group.search.filter=(&(objectclass=group)(member={0}))
+
+
+        # Only Perform Authentication
+        ldap.authenticate.only=true
+
+        # Throw Exception if not exist
+
+        # Create User if not exist
+        ldap.user.create=false
+
+        # Enable newly created users
+        ldap.user.enable=true
+
+        # Map User Properties
+        ldap.user.mapping.attributes=true
+        ldap.user.mapping.attribute.displayName=displayName
+        ldap.user.mapping.attribute.cn=commonName
+        ldap.user.mapping.store=false
+
+        # Default LDAP group if no authorities are found
+        ldap.group.create=true
+        ldap.group.update=false
+        ldap.group.assign.default=true
+        ldap.group.default=manager
+
+        # Mapping of LDAP Authorities to portal groups.
+        # LDAP Authorities are converted from ROLE_ADMIN to role.admin to enable the lookup in properties files.
+        ldap.group.mapping.role.admin=admin
+        ldap.group.mapping.role.manager=manager
+        ldap.group.mapping.role.user=user
+
+
+        Add the authentication provider to the backbase-portal-busines-security.xml
+
+        ﻿<?xml version="1.0" encoding="UTF-8"?>
+        <beans:beans xmlns="http://www.springframework.org/schema/security" xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd http://www.springframework.org/schema/security  http://www.springframework.org/schema/security/spring-security.xsd">
+
+            <ldap-server id="ldap-server" url="${ldap.host}" root="${ldap.root}" manager-dn="${ldap.userDn}" manager-password="${ldap.password}" />
+
+
+            <!-- Configure Authentication mechanism -->
+            <authentication-manager alias="authenticationManager">
+                <ldap-authentication-provider user-search-filter="${ldap.user.search.filter}" user-search-base="${ldap.user.search.base}" group-search-filter="${ldap.group.search.filter}" group-search-base="${ldap.group.search.base}"
+                            user-context-mapper-ref="userDetailsContextMapper">
+                </ldap-authentication-provider>
+                <authentication-provider user-service-ref="portalUserDetailsService">
+                    <password-encoder ref="passwordEncoder" />
+                </authentication-provider>
+
+            </authentication-manager>
+
+            <beans:bean id="userDetailsContextMapper" class="com.backbase.extensions.security.ldap.LdapUserDetailsContextMapper">
+                <beans:constructor-arg index="0" ref="userService" />
+                <beans:constructor-arg index="1" ref="groupService" />
+                <beans:constructor-arg index="2" ref="backbaseConfiguration" />
+            </beans:bean>
+
+
+        </beans:beans>
+]]>
+    </description>
+
+    <scm>
+        <connection>scm:svn:https://svn.backbase.com/services/Mosaic/trunk/bundles/mosaic-security/authentication-provider-ldap</connection>
+        <developerConnection>scm:svn:https://svn.backbase.com/services/Mosaic/trunk/bundles/mosaic-security/authentication-provider-ldap</developerConnection>
+        <url>https://svn.backbase.com/services/Mosaic/trunk/bundles/mosaic-security/authentication-provider-ldap</url>
+    </scm>
+
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.backbase.portal.foundation</groupId>
+            <artifactId>presentation</artifactId>
+            <version>${portal.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Added LDAP Authentication Provider -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-ldap</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>backbase.com/repo</id>
+            <distributionManagement>
+                <repository>
+                    <id>repo.backbase.com</id>
+                    <name>repo.backbase.com-releases</name>
+                    <url>https://repo.backbase.com//expert-release-local</url>
+                </repository>
+                <snapshotRepository>
+                    <id>repo.backbase.com</id>
+                    <name>repo.backbase.com-snapshots</name>
+                    <url>https://repo.backbase.com//expert-release-local</url>
+                </snapshotRepository>
+            </distributionManagement>
+
+        </profile>
+
+       
+          <profile>
+            <id>backbase.com/artifacts</id>
+            <distributionManagement>
+                <repository>
+                    <id>artifacts.backbase.com</id>
+                    <name>artifacts.backbase.com-releases</name>
+                    <url>https://artifacts.backbase.com/backbase-ps-releases</url>
+                </repository>
+                <snapshotRepository>
+                    <id>artifacts.backbase.com</id>
+                    <name>artifacts.backbase.com-snapshots</name>
+                    <url>https://artifacts.backbase.com/backbase-ps-snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+
+        </profile>
+    </profiles>
+</project>
