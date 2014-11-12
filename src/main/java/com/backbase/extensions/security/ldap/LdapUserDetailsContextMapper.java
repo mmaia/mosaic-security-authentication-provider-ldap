@@ -1,11 +1,9 @@
 package com.backbase.extensions.security.ldap;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
 import javax.naming.NamingEnumeration;
@@ -15,8 +13,6 @@ import javax.naming.directory.Attribute;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.BeanInitializationException;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.ldap.core.DirContextAdapter;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -212,12 +208,11 @@ public class LdapUserDetailsContextMapper implements UserDetailsContextMapper {
                 String authorityName = authority.getAuthority();
 
                 String ldapGroupName = authorityName.replace(' ', '.');
-                String property = backbaseConfiguration.getString("ldap.group.mapping." + ldapGroupName);
+                String[] portalGroupNames = backbaseConfiguration.getStringArray("ldap.group.mapping." + ldapGroupName);
                 LOG.info("Retrieving backbase group mapping for ldap authority: {} using property name: {}",
-                        authorityName, property);
+                        authorityName, portalGroupNames);
 
-                if (property != null) {
-                    String[] portalGroupNames = property.split(",");
+                if (portalGroupNames != null) {
                     for (String portalGroupName : portalGroupNames) {
                         Group group = getPortalGroup(portalGroupName.trim(), authorityName);
                         if (group != null) {
